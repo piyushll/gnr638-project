@@ -1,0 +1,27 @@
+# Minimum-version floors. Installed by setup.bash inside the gnr_project_env
+# conda env (python 3.11) on the L40s grading host (Linux, CUDA 12.6, 48 GB
+# VRAM). The pip torch wheels ship CUDA 12.4 runtime libs, which load fine on
+# a 12.6 driver.
+torch>=2.5
+torchvision>=0.20
+
+# Qwen3-VL needs transformers>=4.55. AutoModelForImageTextToText also requires
+# >=4.45. Floor of 4.55 covers both. The 32B-AWQ load path tolerates 5.x just
+# as well (we shim the autoawq compat issue inside solver.py).
+transformers>=4.55
+accelerate>=1.3
+safetensors>=0.5
+huggingface-hub>=0.28
+tokenizers>=0.21
+
+# Image preprocessing helper from the Qwen team (smart_resize etc.). Optional
+# at inference — the native processor handles PIL images directly.
+qwen-vl-utils>=0.0.10
+
+# AWQ-Int4 loader. Only imported when MODEL_PATH is a *-AWQ checkpoint.
+autoawq>=0.2.7
+
+# IO / data.
+pillow>=10
+pandas>=2
+numpy>=1.26,<3

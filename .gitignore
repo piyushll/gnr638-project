@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# Downloaded model weights (~20 GB) — fetched by setup.bash on the grader.
+models/
+
+# Locally generated submission output.
+submission.csv
+
+# IDE / OS / agent noise.
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
