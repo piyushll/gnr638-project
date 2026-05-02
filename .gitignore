@@ -8,6 +8,14 @@ models/
 # Locally generated submission output.
 submission.csv
 
+# Dev tools and local documentation — kept locally for testing/reference but
+# not shipped to the public repo (not used by the grader's flow).
+dataset_hard/
+make_hard_dataset.py
+score.py
+APPROACH.md
+environment.yml
+
 # IDE / OS / agent noise.
 .vscode/
 .idea/
