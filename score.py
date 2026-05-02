@@ -39,7 +39,10 @@ def load_options(path: Path) -> dict[str, int]:
 
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("--submission", default=str(REPO_DIR / "submission.csv"))
+    # Accept both --submission and --submission_file (the latter matches the
+    # grader's exact CLI: `python <grading_script> --submission_file submission.csv`).
+    p.add_argument("--submission", "--submission_file", dest="submission",
+                   default=str(REPO_DIR / "submission.csv"))
     p.add_argument("--answers", default=str(REPO_DIR / "dataset_hard" / "answers.csv"))
     p.add_argument("--verbose", action="store_true")
     args = p.parse_args()
