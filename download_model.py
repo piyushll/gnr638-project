@@ -1,11 +1,11 @@
 """
-Download Qwen2.5-VL weights to ./models/<model-name>/ for offline packaging.
+Download Qwen2.5-VL weights to ./models/<model-name>/.
 
-Run once on a machine with internet, then upload the resulting folder as a
-Kaggle Dataset and attach it to the submission notebook.
+Invoked by setup.bash on the grader (with internet ON during the setup phase).
 
-    python download_model.py                 # default: 32B-AWQ (~20GB)
-    python download_model.py --variant 7b    # lighter fallback (~17GB)
+    python download_model.py                       # default: 32b-awq (~20 GB)
+    python download_model.py --variant 32b-awq     # Qwen2.5-VL-32B-Instruct-AWQ (primary)
+    python download_model.py --variant 3b-awq      # Qwen2.5-VL-3B-Instruct-AWQ (fallback)
 """
 from __future__ import annotations
 
@@ -27,14 +27,9 @@ VARIANTS = {
         "local_name": "Qwen2.5-VL-32B-Instruct-AWQ",
         "approx_gb": 20,
     },
-    "7b": {
-        "repo_id": "Qwen/Qwen2.5-VL-7B-Instruct",
-        "local_name": "Qwen2.5-VL-7B-Instruct",
-        "approx_gb": 17,
-    },
-    # Tiny variant. Used (a) for laptop smoke-tests, (b) as the small
-    # last-resort fallback inside setup.bash so a Qwen3-VL load failure on
-    # the grader still has something loadable to fall through to.
+    # Small last-resort fallback inside setup.bash — if the 32B-AWQ load fails
+    # on the grader for any reason, inference.py auto-falls-through to this
+    # 3B-AWQ which loads cleanly on minimal VRAM.
     "3b-awq": {
         "repo_id": "Qwen/Qwen2.5-VL-3B-Instruct-AWQ",
         "local_name": "Qwen2.5-VL-3B-Instruct-AWQ",
@@ -87,8 +82,8 @@ def main() -> int:
         f"[download] {spec['repo_id']} -> {target} (~{spec['approx_gb']} GB)",
         file=sys.stderr,
     )
-    # huggingface_hub 1.x always copies into local_dir (no symlinks), so the
-    # folder is self-contained and directly uploadable as a Kaggle dataset.
+    # huggingface_hub copies into local_dir (no symlinks), so the folder is
+    # self-contained and inference.py can load it directly via from_pretrained.
     snapshot_download(
         repo_id=spec["repo_id"],
         revision=args.revision,

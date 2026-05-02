@@ -35,9 +35,8 @@ REPO_DIR = Path(__file__).resolve().parent
 # auto-falls-through to the next entry — guaranteeing we always end up with
 # *some* working model as long as setup.bash downloaded both primary + fallback.
 MODEL_PRIORITY = (
-    "Qwen2.5-VL-32B-Instruct-AWQ",     # PRIMARY — Alibaba official AWQ
-    "Qwen2.5-VL-7B-Instruct",          # if user has it locally (no autoawq dep)
-    "Qwen2.5-VL-3B-Instruct-AWQ",      # FALLBACK — small, guaranteed to load
+    "Qwen2.5-VL-32B-Instruct-AWQ",     # PRIMARY — Alibaba official AWQ (downloaded by setup.bash)
+    "Qwen2.5-VL-3B-Instruct-AWQ",      # FALLBACK — small, guaranteed to load (downloaded by setup.bash)
 )
 
 
