@@ -31,9 +31,9 @@ REPO_DIR = Path(__file__).resolve().parent
 
 # Best → worst. inference.py iterates this list and uses the first model whose
 # folder is populated AND whose `from_pretrained` call succeeds. A load failure
-# on Qwen3-VL (e.g., autoawq edge case, missing class in older transformers)
-# auto-falls-through to the next entry — guaranteeing we always end up with
-# *some* working model as long as setup.bash downloaded both primary + fallback.
+# on the 32B-AWQ (e.g., autoawq edge case, transformers version quirk, OOM)
+# auto-falls-through to the 3B-AWQ — guaranteeing we always end up with *some*
+# working model as long as setup.bash downloaded both primary + fallback.
 MODEL_PRIORITY = (
     "Qwen2.5-VL-32B-Instruct-AWQ",     # PRIMARY — Alibaba official AWQ (downloaded by setup.bash)
     "Qwen2.5-VL-3B-Instruct-AWQ",      # FALLBACK — small, guaranteed to load (downloaded by setup.bash)

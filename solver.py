@@ -6,14 +6,15 @@ parsing is deterministic. Self-consistency across N samples picks the majority
 letter. Anything we can't parse confidently falls back to 5 (skip) — NEVER an
 out-of-range value (−1 hallucination penalty is 4× worse than a wrong answer).
 
-Usable as a library (import build_solver) or a CLI:
+Usable as a library (import build_solver, what inference.py does) or as a
+standalone CLI for laptop-side smoke testing:
 
     python solver.py \
-        --model-path ./models/Qwen2.5-VL-7B-Instruct \
-        --test-csv  ../sample_test_project_2/test.csv \
-        --image-dir ../sample_test_project_2/images \
-        --out-csv   ./submission.csv \
-        --num-samples 5
+        --model-path ./models/Qwen2.5-VL-3B-Instruct-AWQ \
+        --test-csv   /path/to/test_dir/test.csv \
+        --image-dir  /path/to/test_dir/images \
+        --out-csv    ./submission.csv \
+        --num-samples 3 --dtype float16
 """
 from __future__ import annotations
 
