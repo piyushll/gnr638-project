@@ -17,6 +17,9 @@ import os
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
+# Reduce peak VRAM fragmentation (PyTorch suggests this in OOM messages).
+# Set BEFORE any torch import — the allocator reads this at first init.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 import argparse
 import sys
@@ -29,14 +32,10 @@ from solver import SolverConfig, VALID_OUTPUT, build_solver
 
 REPO_DIR = Path(__file__).resolve().parent
 
-# Best → worst. inference.py iterates this list and uses the first model whose
-# folder is populated AND whose `from_pretrained` call succeeds. A load failure
-# on the 32B-AWQ (e.g., autoawq edge case, transformers version quirk, OOM)
-# auto-falls-through to the 3B-AWQ — guaranteeing we always end up with *some*
-# working model as long as setup.bash downloaded both primary + fallback.
+# inference.py iterates this list and uses the first model whose folder is
+# populated AND whose `from_pretrained` call succeeds.
 MODEL_PRIORITY = (
-    "Qwen2.5-VL-32B-Instruct-AWQ",     # PRIMARY — Alibaba official AWQ (downloaded by setup.bash)
-    "Qwen2.5-VL-3B-Instruct-AWQ",      # FALLBACK — small, guaranteed to load (downloaded by setup.bash)
+    "Qwen2.5-VL-7B-Instruct",          # PRIMARY — non-AWQ, sidesteps the autoawq Marlin+SM89 dtype mismatch
 )
 
 
@@ -101,9 +100,14 @@ def main() -> int:
     for model_path in candidates:
         cfg = SolverConfig(
             model_path=str(model_path),
-            num_samples=3,
-            # AWQ checkpoints want fp16 on CUDA; non-quantized models can stay auto.
-            dtype="float16" if "AWQ" in model_path.name else "auto",
+            # Greedy decoding (1 sample) instead of 3-sample self-consistency.
+            # Earlier grading run OOMed on a large image at N=3 because the
+            # 3x batched decode tried to allocate 37 GiB on a 48 GB L40s with
+            # 25 GiB free. N=1 reduces peak activation memory ~3x. Tradeoff:
+            # we lose the self-consistency averaging, but inference completes.
+            num_samples=1,
+            # "auto" reads dtype from model config.json (bf16 for Qwen2.5-VL).
+            dtype="auto",
         )
         try:
             print(f"[infer] attempting to load: {model_path}", file=sys.stderr)

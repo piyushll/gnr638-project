@@ -20,8 +20,7 @@ REPO_URL="https://github.com/piyushll/gnr638-project.git"
 REPO_BRANCH="main"
 ENV_NAME="gnr_project_env"
 PY_VERSION="3.11"
-MODEL_VARIANT_PRIMARY="32b-awq"           # Qwen2.5-VL-32B-Instruct-AWQ (official Alibaba AWQ), ~22 GB
-MODEL_VARIANT_FALLBACK="3b-awq"           # Qwen2.5-VL-3B-Instruct-AWQ, ~3 GB — guaranteed-loadable safety net
+MODEL_VARIANT_PRIMARY="7b"                # Qwen2.5-VL-7B-Instruct (non-AWQ, ~17 GB) — avoids the autoawq Marlin kernel SM89 mismatch on L40s
 # --------------------------------------------------------------------------
 
 echo "[setup] $(date -Is) starting"
@@ -69,17 +68,11 @@ echo "[setup] installing pip dependencies into $ENV_NAME"
 "${CONDA_RUN[@]}" python -m pip install --upgrade pip
 "${CONDA_RUN[@]}" python -m pip install --no-cache-dir -r requirements.txt
 
-# 3. Download model weights. We pull TWO models so inference.py has a
-#    multi-tier fallback: if the primary fails to load on the grader
-#    (autoawq edge case, transformers version quirk, etc.), it auto-falls
-#    through to the small known-good model. Total disk: ~25 GB << 50 GB cap.
+# 3. Download model weights (~17 GB). One model only — the 7B non-AWQ load
+#    path is the verified-working configuration on the L40s grader.
 echo "[setup] downloading PRIMARY model: $MODEL_VARIANT_PRIMARY"
 "${CONDA_RUN[@]}" python download_model.py \
     --variant "$MODEL_VARIANT_PRIMARY" --out-dir ./models
-
-echo "[setup] downloading FALLBACK model: $MODEL_VARIANT_FALLBACK"
-"${CONDA_RUN[@]}" python download_model.py \
-    --variant "$MODEL_VARIANT_FALLBACK" --out-dir ./models
 
 # 4. Sanity check: inference.py exists and the model directory is populated.
 test -f ./inference.py || { echo "[setup] ERROR: inference.py missing after clone" >&2; exit 1; }

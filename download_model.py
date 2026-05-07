@@ -3,9 +3,8 @@ Download Qwen2.5-VL weights to ./models/<model-name>/.
 
 Invoked by setup.bash on the grader (with internet ON during the setup phase).
 
-    python download_model.py                       # default: 32b-awq (~20 GB)
-    python download_model.py --variant 32b-awq     # Qwen2.5-VL-32B-Instruct-AWQ (primary)
-    python download_model.py --variant 3b-awq      # Qwen2.5-VL-3B-Instruct-AWQ (fallback)
+    python download_model.py                       # default: 7b (~17 GB)
+    python download_model.py --variant 7b          # Qwen2.5-VL-7B-Instruct (non-AWQ)
 """
 from __future__ import annotations
 
@@ -22,18 +21,14 @@ VARIANTS = {
     # the Qwen org is vLLM/SGLang only and not loadable via transformers.
     # We deliberately do not use community-quantized Qwen3-VL AWQs to keep the
     # weight provenance clean and the load path battle-tested.
-    "32b-awq": {
-        "repo_id": "Qwen/Qwen2.5-VL-32B-Instruct-AWQ",
-        "local_name": "Qwen2.5-VL-32B-Instruct-AWQ",
-        "approx_gb": 20,
-    },
-    # Small last-resort fallback inside setup.bash — if the 32B-AWQ load fails
-    # on the grader for any reason, inference.py auto-falls-through to this
-    # 3B-AWQ which loads cleanly on minimal VRAM.
-    "3b-awq": {
-        "repo_id": "Qwen/Qwen2.5-VL-3B-Instruct-AWQ",
-        "local_name": "Qwen2.5-VL-3B-Instruct-AWQ",
-        "approx_gb": 4,
+    # PRIMARY: Qwen2.5-VL-7B-Instruct (non-quantized, ~17 GB fp16/bf16).
+    # Loads through stock transformers without any AWQ backend — sidesteps
+    # the autoawq Marlin kernel + SM89 (L40s) bf16/fp16 mismatch that broke
+    # the previous AWQ-based submission.
+    "7b": {
+        "repo_id": "Qwen/Qwen2.5-VL-7B-Instruct",
+        "local_name": "Qwen2.5-VL-7B-Instruct",
+        "approx_gb": 17,
     },
 }
 
@@ -58,7 +53,7 @@ def main() -> int:
     p.add_argument(
         "--variant",
         choices=sorted(VARIANTS),
-        default="32b-awq",
+        default="7b",
         help="Which checkpoint to pull.",
     )
     p.add_argument(
